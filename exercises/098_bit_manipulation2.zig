@@ -60,5 +60,30 @@ fn isPangram(str: []const u8) bool {
     // and if so, we know the given string is a pangram
     //
     // but what do we have to compare?
-    return bits == 0x..???;
+    return bits == 0x03FFFFFF; // 26 1-bits
+    // Solution:
+    // We have 26 english letters, so we need 26 spots that we can mark with 1.
+    // We need a u32 which has 32 bits (spots) available, a u16 for example has 16 bits which is less then 26 and is not enough.
+    // We subtract whatever letter we get with 'a' to essentially map each letter we receive from 0 to 25.
+    // Since the bit operation is on a u32, truncate inferes the u32 and makes sure if we receive for example a u64,
+    // removes the "left" (significant) 32 bits to result in a u32 so it can safely do the operation.
+    // The @as(u32, 1) is 00000000 00000000 00000000 00000001
+    // If we receive 'a' then we shift left by 0 (no shift basically)
+    // If we receive 'b' then the operation is: 00000000 00000000 00000000 00000001 << 1, we shift by 1 position and results to:
+    // 00000000 00000000 00000000 00000010
+    // zyx...                       ...cba
+    //
+    // The |= operation if we receive 'a' will be:
+    // 00000000 00000000 00000000 00000000 (bits variable)
+    // 00000000 00000000 00000000 00000001 (letter we received)
+    // -----------------------------------
+    // 00000000 00000000 00000000 00000001 (new bits value)
+    //
+    // And if we receive now 'c' in the |= operation will be:
+    // 00000000 00000000 00000000 00000001 (bits variable)
+    // 00000000 00000000 00000000 00000100 (letter we received)
+    // -----------------------------------
+    // 00000000 00000000 00000000 00000101 (new bits value)
+    // So you see that we start to mark with 1 for each letter of the alphabet we receive.
+    // At the end we need to check if the bits variable equals to 26 ones (11111111 11111111 11111111 11111111) which in hex is 0x03FFFFFF
 }
